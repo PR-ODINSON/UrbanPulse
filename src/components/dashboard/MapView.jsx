@@ -1,11 +1,7 @@
 import { useEffect, useRef } from "react";
-import mapboxgl from "mapbox-gl";
+import L from "leaflet";
 import Card from "../common/Card";
-import {
-  createPulseMarkerElement,
-  getMapboxToken,
-  MAPBOX_STYLE,
-} from "../../services/mapService";
+import { createPulseMarkerElement } from "../../services/mapService";
 
 const mapDefaults = {
   dashboard: {
@@ -28,60 +24,33 @@ const MapView = ({
   const mapId = `${mode}-map`;
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const defaults = mapDefaults[mode];
 
   useEffect(() => {
     if (mapRef.current) {
       return;
     }
-    const token = getMapboxToken();
-    if (!token) {
-      return;
-    }
-    mapboxgl.accessToken = token;
 
-    const defaults = mapDefaults[mode];
-    const map = new mapboxgl.Map({
-      container: mapId,
-      style: MAPBOX_STYLE,
-      center: [defaults.center[1], defaults.center[0]],
-      zoom: defaults.zoom,
-      pitch: 56,
-      bearing: -14,
-      antialias: true,
-    });
+    const map = L.map(mapId, {
+      zoomControl: false,
+      preferCanvas: true,
+    }).setView(defaults.center, defaults.zoom);
 
-    map.on("load", () => {
-      map.addLayer({
-        id: "3d-buildings",
-        source: "composite",
-        "source-layer": "building",
-        filter: ["==", "extrude", "true"],
-        type: "fill-extrusion",
-        minzoom: 12,
-        paint: {
-          "fill-extrusion-color": "#24324c",
-          "fill-extrusion-height": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            12,
-            0,
-            15.5,
-            ["get", "height"],
-          ],
-          "fill-extrusion-base": ["coalesce", ["get", "min_height"], 0],
-          "fill-extrusion-opacity": 0.6,
-        },
-      });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
+
+    map.eachLayer((layer) => {
+      if (layer?.options?.attribution) {
+        layer.getContainer?.()?.setAttribute?.("aria-hidden", "true");
+      }
     });
 
     mapRef.current = map;
 
     return () => {
-      markersRef.current.forEach((entry) => {
-        entry.marker.remove();
-        entry.popup.remove();
-      });
+      markersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
       map.remove();
       mapRef.current = null;
@@ -92,38 +61,33 @@ const MapView = ({
     if (!mapRef.current) {
       return;
     }
-    markersRef.current.forEach((entry) => {
-      entry.marker.remove();
-      entry.popup.remove();
-    });
+    markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
     incidents.forEach((incident) => {
-      const popup = new mapboxgl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-        offset: 14,
-      })
-        .setLngLat([incident.lng, incident.lat])
-        .setHTML(
-          `<strong>${incident.id}</strong> · ${incident.status.toUpperCase()}<br/>${incident.location}<br/>Owner: ${incident.owner}<br/>ETA: ${incident.eta}`,
-        );
       const markerEl = createPulseMarkerElement(incident.severity);
       markerEl.title = `${incident.id}: ${incident.title}`;
-
-      const marker = new mapboxgl.Marker({
-        element: markerEl,
-        anchor: "center",
-      });
-      marker.setLngLat([incident.lng, incident.lat]).addTo(mapRef.current);
-
-      markerEl.addEventListener("mouseenter", () => popup.addTo(mapRef.current));
-      markerEl.addEventListener("mouseleave", () => popup.remove());
-      markerEl.addEventListener("click", () => {
-        onSelectIncident?.(incident.id);
+      const markerIcon = L.divIcon({
+        html: markerEl.outerHTML,
+        className: "pulse-marker-wrapper",
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
       });
 
-      markersRef.current.push({ marker, popup });
+      const marker = L.marker([incident.lat, incident.lng], {
+        icon: markerIcon,
+      })
+        .addTo(mapRef.current)
+        .bindPopup(
+          `<strong>${incident.id}</strong> · ${incident.status.toUpperCase()}<br/>${incident.location}<br/>Owner: ${incident.owner}<br/>ETA: ${incident.eta}`,
+          { closeButton: false, autoClose: false, closeOnClick: false, offset: [0, -12] },
+        );
+
+      marker.on("mouseover", () => marker.openPopup());
+      marker.on("mouseout", () => marker.closePopup());
+      marker.on("click", () => onSelectIncident?.(incident.id));
+
+      markersRef.current.push(marker);
     });
   }, [incidents, onSelectIncident]);
 
@@ -135,12 +99,8 @@ const MapView = ({
     if (!incident) {
       return;
     }
-    mapRef.current.flyTo({
-      center: [incident.lng, incident.lat],
-      zoom: 13.5,
-      pitch: 60,
-      speed: 0.9,
-      curve: 1.2,
+    mapRef.current.flyTo([incident.lat, incident.lng], 13.5, {
+      duration: 1.1,
     });
   }, [selectedIncident, incidents]);
 
@@ -149,13 +109,25 @@ const MapView = ({
       <section className="map-container">
         <div id={mapId} className="map-canvas" />
         <div className="map-controls">
-          <button className="map-control-btn" type="button">
+          <button
+            className="map-control-btn"
+            type="button"
+            onClick={() => mapRef.current?.zoomIn()}
+          >
             +
           </button>
-          <button className="map-control-btn" type="button">
+          <button
+            className="map-control-btn"
+            type="button"
+            onClick={() => mapRef.current?.zoomOut()}
+          >
             -
           </button>
-          <button className="map-control-btn" type="button">
+          <button
+            className="map-control-btn"
+            type="button"
+            onClick={() => mapRef.current?.setView(defaults.center, defaults.zoom)}
+          >
             ◎
           </button>
         </div>
@@ -173,12 +145,6 @@ const MapView = ({
             />
           );
         })}
-        {!getMapboxToken() && (
-          <div className="mapbox-missing-token">
-            Add <code>VITE_MAPBOX_TOKEN</code> in your <code>.env</code> file to
-            enable the 3D Mapbox map.
-          </div>
-        )}
       </section>
     );
   }
@@ -189,12 +155,6 @@ const MapView = ({
         <h3>{title}</h3>
       </div>
       <div id={mapId} className="map map-small" />
-      {!getMapboxToken() && (
-        <div className="mapbox-missing-token">
-          Add <code>VITE_MAPBOX_TOKEN</code> in your <code>.env</code> file to
-          enable the 3D Mapbox map.
-        </div>
-      )}
     </Card>
   );
 };
