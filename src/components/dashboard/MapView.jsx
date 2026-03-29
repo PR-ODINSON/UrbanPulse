@@ -36,9 +36,18 @@ const MapView = ({
       preferCanvas: true,
     }).setView(defaults.center, defaults.zoom);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    const tileUrl =
+      mode === "emergency"
+        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    const attribution =
+      mode === "emergency"
+        ? '&copy; <a href="https://carto.com/">CARTO</a>'
+        : "&copy; OpenStreetMap contributors";
+
+    L.tileLayer(tileUrl, {
       maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors",
+      attribution,
     }).addTo(map);
 
     map.eachLayer((layer) => {

@@ -13,11 +13,12 @@ import Analytics from "./pages/Analytics";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import { useAppContext } from "./context/AppContext";
+import "./styles/pages.css";
 
 const App = () => {
   const { loading, error, retry } = useAppContext();
   const { pathname } = useLocation();
-  const isStandaloneView = pathname === "/dashboard" || pathname === "/";
+  const isStandaloneView = pathname === "/";
 
   return (
     <>

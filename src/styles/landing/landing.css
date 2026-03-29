@@ -8,10 +8,14 @@
   min-height: 100vh;
 }
 
-body.lp-page {
-  overflow-y: auto;
+body.landing-mode {
   overflow-x: hidden;
+  overflow-y: auto;
   height: auto;
+}
+
+body.landing-mode #root {
+  min-height: 100vh;
 }
 
 .lp-reveal {
@@ -230,6 +234,18 @@ body.lp-page {
   animation: lp-fade-up 0.8s var(--lp-ease-out) 1.2s forwards;
 }
 
+.lp-hero__system-note {
+  font-family: var(--lp-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--lp-mid);
+  line-height: 1.7;
+  max-width: 680px;
+  margin: 0 0 34px;
+  opacity: 0;
+  animation: lp-fade-up 0.8s var(--lp-ease-out) 1.3s forwards;
+}
+
 .lp-hero__actions {
   display: flex;
   gap: 16px;
@@ -386,6 +402,15 @@ body.lp-page {
 .lp-features__title em {
   font-style: italic;
   color: var(--lp-muted);
+}
+
+.lp-features__summary {
+  margin-top: 24px;
+  max-width: 460px;
+  font-family: var(--lp-font-ui);
+  font-size: 14px;
+  color: var(--lp-mid);
+  line-height: 1.8;
 }
 
 .lp-features__list {

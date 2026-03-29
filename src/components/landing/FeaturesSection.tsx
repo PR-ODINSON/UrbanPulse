@@ -34,6 +34,11 @@ export default function FeaturesSection() {
             <br />
             <em>tomorrow's cities.</em>
           </h2>
+          <p className="lp-features__summary">
+            The dashboard acts as a single city operations layer: map context, live
+            alert prioritization, and KPI health tracking for faster operational
+            decisions.
+          </p>
         </div>
 
         <div className="lp-features__list">
