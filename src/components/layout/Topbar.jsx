@@ -36,7 +36,7 @@ const Topbar = () => {
   return (
     <header className="top-bar">
       <div className="topbar-brand">
-        URBANPULSE // {titleByPath[pathname] || "CITY GRID"}
+        URBANPULSE // {titleByPath[pathname] || "CITY GRID"} · {data.cityName || "Delhi"}
       </div>
 
       <div className="health-score-display">
