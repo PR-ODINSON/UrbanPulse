@@ -1,10 +1,14 @@
 import { useNavigate } from "react-router-dom";
-import Card from "../common/Card";
-import { sortAlertsBySeverity } from "../../services/alertService";
 
 const AlertsPanel = ({ alerts, onOpenIncident }) => {
   const navigate = useNavigate();
-  const sorted = sortAlertsBySeverity(alerts);
+  const severityOrder = { critical: 0, warning: 1, info: 2 };
+  const normalizedSeverity = (severity) => (severity === "normal" ? "info" : severity);
+  const sorted = [...alerts].sort(
+    (a, b) =>
+      (severityOrder[normalizedSeverity(a.severity)] ?? 99) -
+      (severityOrder[normalizedSeverity(b.severity)] ?? 99),
+  );
 
   const openEmergency = (incidentId) => {
     onOpenIncident(incidentId);
@@ -12,25 +16,35 @@ const AlertsPanel = ({ alerts, onOpenIncident }) => {
   };
 
   return (
-    <Card className="alerts-panel">
-      <div className="panel-head">
-        <h3>Real-Time Alerts</h3>
+    <aside className="alerts-container">
+      <div className="alerts-header">
+        <span>Real-Time Alerts</span>
         <button className="btn btn-ghost" onClick={() => navigate("/emergency")}>
-          View in Emergency
+          Open Queue
         </button>
       </div>
-      <ul className="alert-list">
+      <ul className="alerts-list">
         {sorted.map((alert) => (
-          <li key={alert.id} className={`alert-item ${alert.severity}`}>
-            <strong>{alert.title}</strong>
+          <li
+            key={alert.id}
+            className={`alert-card ${normalizedSeverity(alert.severity)}`}
+            onClick={() => openEmergency(alert.incidentId)}
+          >
+            <span className={`alert-badge ${normalizedSeverity(alert.severity)}`}>
+              {normalizedSeverity(alert.severity)}
+            </span>
+            <p className="alert-title">{alert.title}</p>
             <div className="alert-meta">
               <span>{alert.area}</span>
               <span>{alert.timestamp}</span>
             </div>
-            {alert.severity === "critical" && (
+            {normalizedSeverity(alert.severity) === "critical" && (
               <button
                 className="btn btn-primary"
-                onClick={() => openEmergency(alert.incidentId)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openEmergency(alert.incidentId);
+                }}
               >
                 🚨 ESCALATE NOW
               </button>
@@ -38,7 +52,7 @@ const AlertsPanel = ({ alerts, onOpenIncident }) => {
           </li>
         ))}
       </ul>
-    </Card>
+    </aside>
   );
 };
 
