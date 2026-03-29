@@ -28,6 +28,10 @@ const MapView = ({
   const mapId = `${mode}-map`;
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const zoneLabels = incidents.slice(0, 3).map((incident, index) => ({
+    id: incident.id,
+    label: `Zone-${index + 1} · AQI ${68 + index * 8} · Traffic ${42 + index * 6}%`,
+  }));
 
   useEffect(() => {
     if (mapRef.current) {
@@ -106,7 +110,7 @@ const MapView = ({
       })
         .setLngLat([incident.lng, incident.lat])
         .setHTML(
-          `<strong>${incident.id}</strong> · ${incident.status.toUpperCase()}<br/>${incident.location}`,
+          `<strong>${incident.id}</strong> · ${incident.status.toUpperCase()}<br/>${incident.location}<br/>Owner: ${incident.owner}<br/>ETA: ${incident.eta}`,
         );
       const markerEl = createPulseMarkerElement(incident.severity);
       markerEl.title = `${incident.id}: ${incident.title}`;
@@ -158,11 +162,16 @@ const MapView = ({
         )}
       </div>
       {mode === "dashboard" && (
-        <div className="map-overlay-zones">
-          <span className="zone-chip">Zone-1 AQI 72</span>
-          <span className="zone-chip">Zone-3 Traffic 58%</span>
-          <span className="zone-chip">Zone-5 Incident Active</span>
-        </div>
+        <>
+          <div className="map-overlay-zones">
+            {zoneLabels.map((zone) => (
+              <span key={zone.id} className="zone-chip">
+                {zone.label}
+              </span>
+            ))}
+          </div>
+          <div className="map-grid-overlay" />
+        </>
       )}
       <div id={mapId} className={`map ${mode === "emergency" ? "map-small" : ""}`} />
       {!getMapboxToken() && (

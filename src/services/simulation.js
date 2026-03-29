@@ -103,17 +103,23 @@ export const getSeverityLabel = (score) => {
 
 export const formatLiveTimestamp = (ts) => {
   const sec = Math.max(1, Math.floor((Date.now() - ts) / 1000));
-  return `LIVE · Updated ${sec}s ago`;
+  return `LIVE SYSTEM ACTIVE · Updated ${sec}s ago`;
 };
 
 export const buildInsightText = (state) => {
   const severity = state.incidents[0]?.severity || "normal";
-  const trend = state.metrics.trafficCongestion > 50 ? "rising" : "stable";
+  const trend = state.metrics.trafficCongestion > 50 ? "spike" : "steady";
+  const zone =
+    state.metrics.trafficCongestion > 55
+      ? "Zone 4"
+      : state.metrics.aqi > 100
+        ? "Zone 2"
+        : "Zone 3";
   const tone =
     severity === "critical"
-      ? "Cross-agency coordination is recommended."
-      : "Monitor routing and response lanes.";
-  return `Traffic congestion is ${trend} in Zone 3 due to incident activity. ${tone}`;
+      ? "Cross-agency coordination recommended."
+      : "Routing optimization in progress.";
+  return `Traffic ${trend} detected in ${zone} due to incident activity. ${tone}`;
 };
 
 export const nextSimulationState = (current) => {

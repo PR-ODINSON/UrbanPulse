@@ -11,14 +11,17 @@ const CityHealth = () => {
   return (
     <Card className="city-health-panel">
       <div className="panel-head">
-        <h3>City Health Status</h3>
-        <Badge className={cityHealthSeverity.className}>{cityHealthSeverity.label}</Badge>
+        <h3>City Health Score</h3>
+        <Badge className={cityHealthSeverity.className}>SYSTEM {cityHealthSeverity.label}</Badge>
       </div>
       <div className="health-summary">
         <div className="score-wrap">
           <div className="score-ring" style={{ "--score-angle": angle }}>
             <span>{Math.round(animatedScore)}</span>
           </div>
+          <p className={`hero-health-status ${cityHealthSeverity.className}`}>
+            {cityHealthSeverity.label}
+          </p>
           <p>Composite score from traffic, AQI, utilities, and incidents</p>
         </div>
         <div className="health-breakdown">

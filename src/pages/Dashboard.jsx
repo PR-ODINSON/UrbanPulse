@@ -57,6 +57,7 @@ const Dashboard = () => {
   return (
     <>
       <section className="view active">
+        <AIInsightPanel insightText={insightText} />
         <div className="dashboard-grid">
           <CityHealth />
           <MapView
@@ -66,6 +67,8 @@ const Dashboard = () => {
             selectedIncident={null}
             onSelectIncident={setSelectedIncident}
           />
+
+          <AlertsPanel alerts={data.alerts} onOpenIncident={setSelectedIncident} />
 
           <section className="kpi-grid">
             {kpis.map((kpi) => (
@@ -79,8 +82,6 @@ const Dashboard = () => {
               />
             ))}
           </section>
-
-          <AlertsPanel alerts={data.alerts} onOpenIncident={setSelectedIncident} />
         </div>
       </section>
 
@@ -93,8 +94,6 @@ const Dashboard = () => {
         </div>
         <p className="muted">{drawerType ? detailTexts[drawerType] : ""}</p>
       </aside>
-
-      <AIInsightPanel insightText={insightText} />
     </>
   );
 };
