@@ -21,7 +21,10 @@ const MapView = ({
   selectedIncident,
   onSelectIncident,
 }) => {
-  const mapId = `${mode}-map`;
+  const mapIdRef = useRef(
+    `map-${mode}-${Math.random().toString(36).slice(2, 10)}`,
+  );
+  const mapId = mapIdRef.current;
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const defaults = mapDefaults[mode];
@@ -50,15 +53,18 @@ const MapView = ({
       attribution,
     }).addTo(map);
 
-    map.eachLayer((layer) => {
-      if (layer?.options?.attribution) {
-        layer.getContainer?.()?.setAttribute?.("aria-hidden", "true");
-      }
-    });
+    const invalidateMapSize = () => map.invalidateSize();
+    const observer = new ResizeObserver(invalidateMapSize);
+    observer.observe(map.getContainer());
+    window.addEventListener("resize", invalidateMapSize);
+    window.setTimeout(invalidateMapSize, 0);
+    window.setTimeout(invalidateMapSize, 250);
 
     mapRef.current = map;
 
     return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", invalidateMapSize);
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
       map.remove();
@@ -115,7 +121,7 @@ const MapView = ({
 
   if (mode === "dashboard") {
     return (
-      <section className="map-container">
+      <section className="map-viewport">
         <div id={mapId} className="map-canvas" />
         <div className="map-controls">
           <button
