@@ -1,0 +1,10 @@
+@import "../../styles.css";
+
+.nav-item {
+  display: block;
+  text-decoration: none;
+}
+
+.view {
+  display: block;
+}
