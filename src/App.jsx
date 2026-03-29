@@ -1,4 +1,5 @@
 import { Route, Routes, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
 import Loader from "./components/common/Loader";
@@ -16,9 +17,13 @@ import { useAppContext } from "./context/AppContext";
 import "./styles/pages.css";
 
 const App = () => {
-  const { loading, error, retry } = useAppContext();
+  const { loading, error, retry, theme } = useAppContext();
   const { pathname } = useLocation();
   const isStandaloneView = pathname === "/";
+
+  useEffect(() => {
+    document.body.setAttribute("data-theme", theme);
+  }, [theme]);
 
   return (
     <>

@@ -17,7 +17,7 @@ const titleByPath = {
 
 const Topbar = () => {
   const { pathname } = useLocation();
-  const { data, cityHealthScore } = useAppContext();
+  const { data, cityHealthScore, theme, toggleTheme } = useAppContext();
   const liveLabel = useLiveData(data.lastUpdatedTs);
   const [clockLabel, setClockLabel] = useState(() =>
     new Date().toLocaleTimeString([], { hour12: false }),
@@ -51,6 +51,14 @@ const Topbar = () => {
         <span className="live-dot" />
         <span>{liveLabel}</span>
         <span>{clockLabel}</span>
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+        >
+          {theme === "dark" ? "Light" : "Dark"}
+        </button>
       </div>
     </header>
   );
