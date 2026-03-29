@@ -1,9 +1,50 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MapView from "../components/dashboard/MapView";
 import { useAppContext } from "../context/AppContext";
 
 const Dashboard = () => {
-  const { data, setSelectedIncident, cityHealthScore } = useAppContext();
+  const {
+    data,
+    setSelectedIncident,
+    cityHealthScore,
+    cityOptions,
+    selectedCityId,
+    switchCity,
+  } = useAppContext();
+  const [cityQuery, setCityQuery] = useState("");
+
+  useEffect(() => {
+    const active = cityOptions.find((city) => city.id === selectedCityId);
+    setCityQuery(active ? active.name : "");
+  }, [cityOptions, selectedCityId]);
+
+  const matchingCities = useMemo(() => {
+    const query = cityQuery.trim().toLowerCase();
+    if (!query) {
+      return cityOptions;
+    }
+    return cityOptions.filter(
+      (city) =>
+        city.name.toLowerCase().includes(query) ||
+        city.state.toLowerCase().includes(query),
+    );
+  }, [cityOptions, cityQuery]);
+
+  const applyCitySearch = () => {
+    if (!cityQuery.trim()) {
+      return;
+    }
+    const exactMatch = cityOptions.find(
+      (city) =>
+        city.name.toLowerCase() === cityQuery.trim().toLowerCase() ||
+        `${city.name}, ${city.state}`.toLowerCase() === cityQuery.trim().toLowerCase(),
+    );
+    const nextCity = exactMatch || matchingCities[0];
+    if (nextCity) {
+      switchCity(nextCity.id);
+      setCityQuery(nextCity.name);
+    }
+  };
 
   const kpis = useMemo(
     () => [
@@ -69,7 +110,7 @@ const Dashboard = () => {
           <span className="page-hero__eyebrow" style={{ color: "#38BDF8" }}>
             City Operations Overview
           </span>
-          <h1 className="page-hero__title">Command Center</h1>
+          <h1 className="page-hero__title">Command Center · {data.cityName}</h1>
         </div>
         <div className="stat-cell" style={{ background: "transparent", padding: 0 }}>
           <span className="stat-cell__label">City Health</span>
@@ -109,7 +150,38 @@ const Dashboard = () => {
           <div className="pcard">
             <div className="pcard__header">
               <span className="pcard__title">Live City Map</span>
-              <span className="pcard__badge pcard__badge--ok">Live</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span className="pcard__badge pcard__badge--ok">Live</span>
+                <input
+                  list="dashboard-city-options"
+                  value={cityQuery}
+                  onChange={(event) => setCityQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      applyCitySearch();
+                    }
+                  }}
+                  placeholder="Search city..."
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.16)",
+                    color: "rgba(255,255,255,0.85)",
+                    borderRadius: 4,
+                    padding: "5px 8px",
+                    fontFamily: "JetBrains Mono",
+                    fontSize: 11,
+                    minWidth: 170,
+                  }}
+                />
+                <datalist id="dashboard-city-options">
+                  {cityOptions.map((city) => (
+                    <option key={city.id} value={`${city.name}, ${city.state}`} />
+                  ))}
+                </datalist>
+                <button className="btn btn-ghost" onClick={applyCitySearch}>
+                  Search
+                </button>
+              </div>
             </div>
             <div className="pcard__body--noPad" style={{ flex: 1, minHeight: 300 }}>
               <MapView
@@ -118,6 +190,10 @@ const Dashboard = () => {
                 incidents={data.incidents}
                 selectedIncident={null}
                 onSelectIncident={setSelectedIncident}
+                cityCenter={data.cityCenter}
+                cityOptions={cityOptions}
+                selectedCityId={selectedCityId}
+                onSelectCity={switchCity}
               />
             </div>
           </div>

@@ -20,6 +20,10 @@ const MapView = ({
   incidents = [],
   selectedIncident,
   onSelectIncident,
+  cityCenter,
+  cityOptions = [],
+  selectedCityId = "delhi",
+  onSelectCity,
 }) => {
   const mapIdRef = useRef(
     `map-${mode}-${Math.random().toString(36).slice(2, 10)}`,
@@ -27,6 +31,7 @@ const MapView = ({
   const mapId = mapIdRef.current;
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const cityMarkersRef = useRef([]);
   const defaults = mapDefaults[mode];
 
   useEffect(() => {
@@ -66,7 +71,9 @@ const MapView = ({
       observer.disconnect();
       window.removeEventListener("resize", invalidateMapSize);
       markersRef.current.forEach((marker) => marker.remove());
+      cityMarkersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
+      cityMarkersRef.current = [];
       map.remove();
       mapRef.current = null;
     };
@@ -107,6 +114,29 @@ const MapView = ({
   }, [incidents, onSelectIncident]);
 
   useEffect(() => {
+    if (!mapRef.current || mode !== "dashboard" || cityOptions.length === 0) {
+      return;
+    }
+    cityMarkersRef.current.forEach((marker) => marker.remove());
+    cityMarkersRef.current = [];
+
+    cityOptions.forEach((city) => {
+      const marker = L.circleMarker([city.lat, city.lng], {
+        radius: city.id === selectedCityId ? 7 : 5,
+        color: city.id === selectedCityId ? "#22d3ee" : "rgba(212,226,255,0.9)",
+        fillColor: city.id === selectedCityId ? "#22d3ee" : "rgba(212,226,255,0.65)",
+        fillOpacity: city.id === selectedCityId ? 0.9 : 0.5,
+        weight: 1.5,
+      })
+        .addTo(mapRef.current)
+        .bindTooltip(`${city.name}, ${city.state}`, { direction: "top", offset: [0, -8] });
+
+      marker.on("click", () => onSelectCity?.(city.id));
+      cityMarkersRef.current.push(marker);
+    });
+  }, [cityOptions, mode, onSelectCity, selectedCityId]);
+
+  useEffect(() => {
     if (!selectedIncident || !mapRef.current) {
       return;
     }
@@ -118,6 +148,23 @@ const MapView = ({
       duration: 1.1,
     });
   }, [selectedIncident, incidents]);
+
+  useEffect(() => {
+    if (!mapRef.current || !cityCenter) {
+      return;
+    }
+    mapRef.current.flyTo([cityCenter.lat, cityCenter.lng], mode === "dashboard" ? 10.5 : 12, {
+      duration: 1.1,
+    });
+  }, [cityCenter, mode]);
+
+  const focusAllCities = () => {
+    if (!mapRef.current || cityOptions.length === 0) {
+      return;
+    }
+    const bounds = L.latLngBounds(cityOptions.map((city) => [city.lat, city.lng]));
+    mapRef.current.fitBounds(bounds.pad(0.18));
+  };
 
   if (mode === "dashboard") {
     return (
@@ -141,9 +188,17 @@ const MapView = ({
           <button
             className="map-control-btn"
             type="button"
-            onClick={() => mapRef.current?.setView(defaults.center, defaults.zoom)}
+            onClick={() =>
+              mapRef.current?.setView(
+                cityCenter ? [cityCenter.lat, cityCenter.lng] : defaults.center,
+                defaults.zoom,
+              )
+            }
           >
             ◎
+          </button>
+          <button className="map-control-btn" type="button" onClick={focusAllCities}>
+            ◫
           </button>
         </div>
         {incidents.slice(0, 5).map((incident, index) => {
