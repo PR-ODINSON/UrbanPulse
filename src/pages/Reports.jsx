@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -49,6 +50,8 @@ const categoryData = [
 
 const Reports = () => {
   const { data, setSelectedIncident } = useAppContext();
+  const [selectedReportId, setSelectedReportId] = useState(reports[0]?.id || "");
+  const selectedReport = reports.find((item) => item.id === selectedReportId) || reports[0];
 
   return (
     <section className="view active page-root" data-page="reports">
@@ -66,17 +69,26 @@ const Reports = () => {
           <div className="pcard">
             <div className="pcard__header">
               <span className="pcard__title">Complaint Queue</span>
+              <span className="pcard__badge pcard__badge--warning">
+                Focus: {selectedReport?.id}
+              </span>
             </div>
             <div className="pcard__body--noPad">
               {reports.map((report) => (
                 <div
                   key={report.id}
+                  onClick={() => setSelectedReportId(report.id)}
                   style={{
                     padding: "12px 16px",
                     borderBottom: "1px solid rgba(255,255,255,0.04)",
                     display: "flex",
                     alignItems: "flex-start",
                     gap: 12,
+                    cursor: "pointer",
+                    background:
+                      selectedReportId === report.id
+                        ? "rgba(249,115,22,0.1)"
+                        : "transparent",
                   }}
                 >
                   <div style={{ flex: 1 }}>
@@ -178,6 +190,9 @@ const Reports = () => {
             <div className="pcard" style={{ flex: 1 }}>
               <div className="pcard__header">
                 <span className="pcard__title">Map-Linked Reports</span>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+                  {selectedReport?.category} · {selectedReport?.location}
+                </span>
               </div>
               <div className="pcard__body--noPad" style={{ minHeight: 220 }}>
                 <MapView

@@ -1,10 +1,12 @@
+import { useMemo, useState } from "react";
+
 const integrations = [
   { name: "Open-Meteo", connected: true, lastSync: "10s ago" },
   { name: "OpenStreetMap", connected: true, lastSync: "12s ago" },
   { name: "GTFS Feed", connected: true, lastSync: "8s ago" },
 ];
 
-const notifications = [
+const notificationDefaults = [
   {
     id: "critical",
     label: "Critical alerts",
@@ -32,7 +34,24 @@ const systemSettings = [
 ];
 
 const Settings = () => {
-  const handleToggle = () => {};
+  const [notificationState, setNotificationState] = useState(notificationDefaults);
+
+  const enabledCount = useMemo(
+    () => notificationState.filter((item) => item.enabled).length,
+    [notificationState],
+  );
+
+  const handleToggle = (id) => {
+    setNotificationState((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, enabled: !item.enabled } : item,
+      ),
+    );
+  };
+
+  const setAllNotifications = (enabled) => {
+    setNotificationState((prev) => prev.map((item) => ({ ...item, enabled })));
+  };
 
   return (
     <section className="view active page-root" data-page="settings">
@@ -87,9 +106,27 @@ const Settings = () => {
             <div className="pcard">
               <div className="pcard__header">
                 <span className="pcard__title">Notification Preferences</span>
+                <span className="pcard__badge pcard__badge--ok">
+                  {enabledCount}/{notificationState.length} enabled
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  padding: "10px 16px",
+                  borderBottom: "1px solid rgba(255,255,255,0.04)",
+                }}
+              >
+                <button className="btn btn-ghost" onClick={() => setAllNotifications(true)}>
+                  Enable all
+                </button>
+                <button className="btn btn-ghost" onClick={() => setAllNotifications(false)}>
+                  Disable all
+                </button>
               </div>
               <div className="pcard__body--noPad">
-                {notifications.map((notif) => (
+                {notificationState.map((notif) => (
                   <div
                     key={notif.id}
                     style={{

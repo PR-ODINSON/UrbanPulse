@@ -1,85 +1,134 @@
-export const initialSimulationState = () => ({
-  metrics: {
-    trafficCongestion: 41,
-    aqi: 89,
-    energyGw: 1.3,
-    incidents: 3,
-    subscores: {
-      traffic: 82,
-      environment: 74,
-      utilities: 88,
-      incidents: 91,
-    },
-  },
-  alerts: [
-    {
-      id: "AL-901",
-      severity: "critical",
-      title: "Chemical spill near Central Station",
-      area: "Central Zone",
-      timestamp: "10 sec ago",
-      incidentId: "IN-931",
-    },
-    {
-      id: "AL-902",
-      severity: "warning",
-      title: "AQI rising above threshold in East Ring",
-      area: "East Ring",
-      timestamp: "35 sec ago",
-      incidentId: "IN-932",
-    },
-    {
-      id: "AL-903",
-      severity: "normal",
-      title: "Transit line recovered to baseline",
-      area: "North Corridor",
-      timestamp: "1 min ago",
-      incidentId: "IN-933",
-    },
+export const CITY_SEEDS = {
+  delhi: { name: "Delhi", state: "Delhi", lat: 28.6139, lng: 77.209, traffic: 41, aqi: 89, energyGw: 1.3 },
+  mumbai: { name: "Mumbai", state: "Maharashtra", lat: 19.076, lng: 72.8777, traffic: 58, aqi: 96, energyGw: 1.82 },
+  bengaluru: { name: "Bengaluru", state: "Karnataka", lat: 12.9716, lng: 77.5946, traffic: 52, aqi: 68, energyGw: 1.55 },
+  hyderabad: { name: "Hyderabad", state: "Telangana", lat: 17.385, lng: 78.4867, traffic: 47, aqi: 81, energyGw: 1.48 },
+  chennai: { name: "Chennai", state: "Tamil Nadu", lat: 13.0827, lng: 80.2707, traffic: 46, aqi: 76, energyGw: 1.51 },
+  kolkata: { name: "Kolkata", state: "West Bengal", lat: 22.5726, lng: 88.3639, traffic: 54, aqi: 103, energyGw: 1.42 },
+  pune: { name: "Pune", state: "Maharashtra", lat: 18.5204, lng: 73.8567, traffic: 44, aqi: 84, energyGw: 1.12 },
+  ahmedabad: { name: "Ahmedabad", state: "Gujarat", lat: 23.0225, lng: 72.5714, traffic: 43, aqi: 92, energyGw: 1.06 },
+  jaipur: { name: "Jaipur", state: "Rajasthan", lat: 26.9124, lng: 75.7873, traffic: 39, aqi: 98, energyGw: 0.94 },
+  indore: { name: "Indore", state: "Madhya Pradesh", lat: 22.7196, lng: 75.8577, traffic: 36, aqi: 79, energyGw: 0.88 },
+  bhopal: { name: "Bhopal", state: "Madhya Pradesh", lat: 23.2599, lng: 77.4126, traffic: 34, aqi: 82, energyGw: 0.83 },
+  lucknow: { name: "Lucknow", state: "Uttar Pradesh", lat: 26.8467, lng: 80.9462, traffic: 42, aqi: 109, energyGw: 0.97 },
+};
+
+export const CITY_OPTIONS = Object.entries(CITY_SEEDS).map(([id, value]) => ({
+  id,
+  ...value,
+}));
+
+const incidentTitles = {
+  critical: [
+    "Hazmat response near logistics corridor",
+    "Grid instability at primary substation",
+    "Flooded arterial underpass impacting emergency lanes",
   ],
-  incidents: [
-    {
-      id: "IN-931",
-      severity: "critical",
-      title: "Hazmat response - chemical spill",
-      location: "Central Station, Grid C4",
-      status: "active",
-      owner: "Emergency Ops Unit",
-      eta: "Containment in 18 min",
-      description:
-        "Leak reported from industrial tanker. Route diversions active. Medical standby dispatched.",
-      lat: 28.614,
-      lng: 77.209,
-    },
-    {
-      id: "IN-932",
-      severity: "warning",
-      title: "AQI hotspot - particulate spike",
-      location: "East Ring Sector E2",
-      status: "active",
-      owner: "Environmental Command",
-      eta: "Air scrubber units in 25 min",
-      description:
-        "Sensor cluster E2 reports sustained PM2.5 spikes. Advisory issued for schools and clinics.",
-      lat: 28.623,
-      lng: 77.248,
-    },
-    {
-      id: "IN-933",
-      severity: "normal",
-      title: "Bus lane blockage cleared",
-      location: "North Corridor N1",
-      status: "resolved",
-      owner: "Transport Control",
-      eta: "Closed",
-      description:
-        "Obstruction removed and route timing normalized. Monitoring for residual delays.",
-      lat: 28.642,
-      lng: 77.197,
-    },
+  warning: [
+    "AQI hotspot detected by sensor cluster",
+    "Transit headway instability on major route",
+    "Localized power load nearing threshold",
   ],
-  lastUpdatedTs: Date.now(),
+  normal: [
+    "Traffic bottleneck cleared by field unit",
+    "Water pressure returned to nominal",
+    "Minor service anomaly resolved",
+  ],
+};
+
+const pickTitle = (severity, index) =>
+  incidentTitles[severity][index % incidentTitles[severity].length];
+
+const toSubscores = ({ traffic, aqi, energyGw, incidents }) => ({
+  traffic: Math.max(35, 100 - traffic),
+  environment: Math.max(35, 110 - aqi),
+  utilities: Math.max(50, 100 - Math.round((energyGw - 1) * 18)),
+  incidents: Math.max(40, 100 - incidents * 12),
 });
+
+const buildCityIncidents = (citySeed) => {
+  const cityCode = citySeed.name.slice(0, 3).toUpperCase();
+  const points = [
+    { lat: citySeed.lat + 0.01, lng: citySeed.lng - 0.01, severity: "critical", status: "active", owner: "Emergency Ops Unit", eta: "Containment in 18 min", location: `${citySeed.name} Central Grid C4` },
+    { lat: citySeed.lat + 0.018, lng: citySeed.lng + 0.014, severity: "warning", status: "active", owner: "Environmental Command", eta: "Mitigation in 24 min", location: `${citySeed.name} East Sector E2` },
+    { lat: citySeed.lat - 0.012, lng: citySeed.lng - 0.006, severity: "normal", status: "resolved", owner: "Transport Control", eta: "Closed", location: `${citySeed.name} North Corridor N1` },
+  ];
+
+  return points.map((point, index) => {
+    const id = `IN-${cityCode}-${index + 1}`;
+    return {
+      id,
+      severity: point.severity,
+      title: pickTitle(point.severity, index),
+      location: point.location,
+      status: point.status,
+      owner: point.owner,
+      eta: point.eta,
+      description: `${citySeed.name} control room flagged ${point.severity} operational conditions. Cross-team monitoring remains active.`,
+      lat: Number(point.lat.toFixed(4)),
+      lng: Number(point.lng.toFixed(4)),
+    };
+  });
+};
+
+const buildCityAlerts = (citySeed, incidents) => {
+  const cityCode = citySeed.name.slice(0, 3).toUpperCase();
+  return [
+    {
+      id: `AL-${cityCode}-1`,
+      severity: "critical",
+      title: `${citySeed.name} priority incident requires escalation`,
+      area: `${citySeed.name} Central Zone`,
+      timestamp: "10 sec ago",
+      incidentId: incidents[0].id,
+    },
+    {
+      id: `AL-${cityCode}-2`,
+      severity: "warning",
+      title: `AQI warning pocket detected in ${citySeed.name} East Ring`,
+      area: `${citySeed.name} East Ring`,
+      timestamp: "35 sec ago",
+      incidentId: incidents[1].id,
+    },
+    {
+      id: `AL-${cityCode}-3`,
+      severity: "normal",
+      title: `Transit baseline restored in ${citySeed.name} North Corridor`,
+      area: `${citySeed.name} North Corridor`,
+      timestamp: "1 min ago",
+      incidentId: incidents[2].id,
+    },
+  ];
+};
+
+export const initialSimulationState = (cityId = "delhi") => {
+  const city = CITY_SEEDS[cityId] || CITY_SEEDS.delhi;
+  const incidents = buildCityIncidents(city);
+  const incidentsCount = incidents.filter((item) => item.status === "active").length;
+  const metrics = {
+    trafficCongestion: city.traffic,
+    aqi: city.aqi,
+    energyGw: city.energyGw,
+    incidents: incidentsCount,
+    subscores: toSubscores({
+      traffic: city.traffic,
+      aqi: city.aqi,
+      energyGw: city.energyGw,
+      incidents: incidentsCount,
+    }),
+  };
+
+  return {
+    cityId,
+    cityName: city.name,
+    stateName: city.state,
+    cityCenter: { lat: city.lat, lng: city.lng },
+    metrics,
+    alerts: buildCityAlerts(city, incidents),
+    incidents,
+    lastUpdatedTs: Date.now(),
+  };
+};
 
 const bumpMetric = (value, min, max, step = 3) => {
   const delta = Math.round((Math.random() - 0.5) * step * 2);
@@ -119,7 +168,7 @@ export const buildInsightText = (state) => {
     severity === "critical"
       ? "Cross-agency coordination recommended."
       : "Routing optimization in progress.";
-  return `Traffic ${trend} detected in ${zone} due to incident activity. ${tone}`;
+  return `${state.cityName || "City"} traffic ${trend} detected in ${zone} due to incident activity. ${tone}`;
 };
 
 export const nextSimulationState = (current) => {
@@ -151,7 +200,7 @@ export const nextSimulationState = (current) => {
   );
 
   if (Math.random() > 0.7) {
-    const critical = next.alerts.find((alert) => alert.id === "AL-901");
+    const critical = next.alerts.find((alert) => alert.severity === "critical");
     if (critical) {
       critical.timestamp = "just now";
     }

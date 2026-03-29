@@ -1,10 +1,20 @@
+import { useState } from "react";
 import MapView from "../components/dashboard/MapView";
 import { useAppContext } from "../context/AppContext";
 
 const Emergency = () => {
   const { data, selectedIncident, setSelectedIncident } = useAppContext();
+  const [actionStatus, setActionStatus] = useState("Awaiting operator action.");
   const incident =
     data.incidents.find((item) => item.id === selectedIncident) || data.incidents[0];
+
+  const handleDispatch = () => {
+    setActionStatus(`Response dispatched for ${incident.id}. Field teams notified.`);
+  };
+
+  const handleRequestUpdate = () => {
+    setActionStatus(`Update requested from ${incident.owner}. Awaiting response.`);
+  };
 
   return (
     <section className="view active page-root" data-page="emergency">
@@ -139,9 +149,23 @@ const Emergency = () => {
               <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: "16px 0 20px" }}>
                 {incident.description}
               </p>
+              <div
+                style={{
+                  marginBottom: 14,
+                  padding: "10px 12px",
+                  borderRadius: 6,
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(56,189,248,0.08)",
+                  fontSize: 12,
+                  color: "rgba(220,236,255,0.88)",
+                }}
+              >
+                {actionStatus}
+              </div>
 
               <div style={{ display: "flex", gap: 10 }}>
                 <button
+                  onClick={handleDispatch}
                   style={{
                     flex: 1,
                     padding: "10px 0",
@@ -159,6 +183,7 @@ const Emergency = () => {
                   Dispatch Response
                 </button>
                 <button
+                  onClick={handleRequestUpdate}
                   style={{
                     flex: 1,
                     padding: "10px 0",
