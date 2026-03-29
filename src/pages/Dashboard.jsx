@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
-import CityHealth from "../components/dashboard/CityHealth";
 import MapView from "../components/dashboard/MapView";
 import KPICard from "../components/dashboard/KPICard";
 import AlertsPanel from "../components/dashboard/AlertsPanel";
-import AIInsightPanel from "../components/dashboard/AIInsightPanel";
+import Topbar from "../components/layout/Topbar";
 import { useAppContext } from "../context/AppContext";
 
 const detailTexts = {
@@ -14,10 +13,12 @@ const detailTexts = {
     "Energy demand is below critical threshold but climbing. Maintain reserve margin and monitor substation E2 for anomaly progression.",
   incidents:
     "Three incidents active across transport and environment. One critical incident requires cross-department coordination.",
+  health:
+    "Composite health balances mobility, environment, utilities, and response posture. Monitor trend changes for proactive interventions.",
 };
 
 const Dashboard = () => {
-  const { data, setSelectedIncident, insightText } = useAppContext();
+  const { data, setSelectedIncident } = useAppContext();
   const [drawerType, setDrawerType] = useState(null);
 
   const kpis = useMemo(
@@ -47,8 +48,21 @@ const Dashboard = () => {
         key: "incidents",
         type: "incidents",
         title: "Active Incidents",
-        subtitle: "1 critical, 2 warning",
+        subtitle: "Operational queue",
         value: data.metrics.incidents,
+      },
+      {
+        key: "health",
+        type: "health",
+        title: "Health Index",
+        subtitle: "Composite resilience score",
+        value: Math.round(
+          (data.metrics.subscores.traffic +
+            data.metrics.subscores.environment +
+            data.metrics.subscores.utilities +
+            data.metrics.subscores.incidents) /
+            4,
+        ),
       },
     ],
     [data.metrics],
@@ -56,33 +70,32 @@ const Dashboard = () => {
 
   return (
     <>
-      <section className="view active">
-        <AIInsightPanel insightText={insightText} />
-        <div className="dashboard-grid">
-          <CityHealth />
-          <MapView
-            mode="dashboard"
-            title="City Operations Map"
-            incidents={data.incidents}
-            selectedIncident={null}
-            onSelectIncident={setSelectedIncident}
-          />
-
-          <AlertsPanel alerts={data.alerts} onOpenIncident={setSelectedIncident} />
-
-          <section className="kpi-grid">
-            {kpis.map((kpi) => (
-              <KPICard
-                key={kpi.key}
-                type={kpi.type}
-                title={kpi.title}
-                subtitle={kpi.subtitle}
-                value={kpi.value}
-                onClick={() => setDrawerType(kpi.type)}
-              />
-            ))}
-          </section>
+      <section className="view active dashboard-root">
+        <div className="topbar-container">
+          <Topbar />
         </div>
+        <MapView
+          mode="dashboard"
+          title="City Operations Map"
+          incidents={data.incidents}
+          selectedIncident={null}
+          onSelectIncident={setSelectedIncident}
+        />
+
+        <AlertsPanel alerts={data.alerts} onOpenIncident={setSelectedIncident} />
+
+        <section className="kpi-container">
+          {kpis.map((kpi) => (
+            <KPICard
+              key={kpi.key}
+              type={kpi.type}
+              title={kpi.title}
+              subtitle={kpi.subtitle}
+              value={kpi.value}
+              onClick={() => setDrawerType(kpi.type)}
+            />
+          ))}
+        </section>
       </section>
 
       <aside className={`detail-drawer ${drawerType ? "" : "hidden"}`.trim()}>

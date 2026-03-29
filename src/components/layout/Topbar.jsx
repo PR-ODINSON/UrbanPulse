@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import Badge from "../common/Badge";
+import { useEffect, useState } from "react";
 import { useLiveData } from "../../hooks/useLiveData";
 import { useAppContext } from "../../context/AppContext";
 
@@ -17,20 +17,40 @@ const titleByPath = {
 
 const Topbar = () => {
   const { pathname } = useLocation();
-  const { data } = useAppContext();
+  const { data, cityHealthScore } = useAppContext();
   const liveLabel = useLiveData(data.lastUpdatedTs);
+  const [clockLabel, setClockLabel] = useState(() =>
+    new Date().toLocaleTimeString([], { hour12: false }),
+  );
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setClockLabel(new Date().toLocaleTimeString([], { hour12: false }));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const healthClass =
+    cityHealthScore >= 80 ? "nominal" : cityHealthScore >= 60 ? "warning" : "critical";
 
   return (
     <header className="top-bar">
-      <div>
-        <h2>{titleByPath[pathname] || "UrbanPulse"}</h2>
-        <p className="muted" id="last-updated">
-          {liveLabel}
-        </p>
+      <div className="topbar-brand">
+        URBANPULSE // {titleByPath[pathname] || "CITY GRID"}
       </div>
-      <div className="top-actions">
-        <Badge className="status-online">Live Data</Badge>
-        <Badge>Role: Admin</Badge>
+
+      <div className="health-score-display">
+        <span className="health-label">City Health</span>
+        <span className={`health-value ${healthClass}`} data-score={cityHealthScore}>
+          {cityHealthScore}
+        </span>
+        <span className="health-trend">↑ +2 pts</span>
+      </div>
+
+      <div className="live-indicator">
+        <span className="live-dot" />
+        <span>{liveLabel}</span>
+        <span>{clockLabel}</span>
       </div>
     </header>
   );

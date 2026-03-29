@@ -28,10 +28,6 @@ const MapView = ({
   const mapId = `${mode}-map`;
   const mapRef = useRef(null);
   const markersRef = useRef([]);
-  const zoneLabels = incidents.slice(0, 3).map((incident, index) => ({
-    id: incident.id,
-    label: `Zone-${index + 1} · AQI ${68 + index * 8} · Traffic ${42 + index * 6}%`,
-  }));
 
   useEffect(() => {
     if (mapRef.current) {
@@ -148,32 +144,51 @@ const MapView = ({
     });
   }, [selectedIncident, incidents]);
 
-  return (
-    <Card className={mode === "dashboard" ? "map-panel" : ""}>
-      <div className="panel-head">
-        <h3>{title}</h3>
-        {mode === "dashboard" && (
-          <div className="map-toggles">
-            <span className="tag">Traffic</span>
-            <span className="tag">AQI</span>
-            <span className="tag">Incidents</span>
-            <span className="tag">Transit</span>
+  if (mode === "dashboard") {
+    return (
+      <section className="map-container">
+        <div id={mapId} className="map-canvas" />
+        <div className="map-controls">
+          <button className="map-control-btn" type="button">
+            +
+          </button>
+          <button className="map-control-btn" type="button">
+            -
+          </button>
+          <button className="map-control-btn" type="button">
+            ◎
+          </button>
+        </div>
+        {incidents.slice(0, 5).map((incident, index) => {
+          const left = 22 + index * 14;
+          const top = 24 + (index % 3) * 18;
+          return (
+            <button
+              key={`sensor-${incident.id}`}
+              type="button"
+              className={`sensor-pin ${incident.severity}`}
+              style={{ left: `${left}%`, top: `${top}%` }}
+              onClick={() => onSelectIncident?.(incident.id)}
+              aria-label={`Sensor ${incident.id}`}
+            />
+          );
+        })}
+        {!getMapboxToken() && (
+          <div className="mapbox-missing-token">
+            Add <code>VITE_MAPBOX_TOKEN</code> in your <code>.env</code> file to
+            enable the 3D Mapbox map.
           </div>
         )}
+      </section>
+    );
+  }
+
+  return (
+    <Card>
+      <div className="panel-head">
+        <h3>{title}</h3>
       </div>
-      {mode === "dashboard" && (
-        <>
-          <div className="map-overlay-zones">
-            {zoneLabels.map((zone) => (
-              <span key={zone.id} className="zone-chip">
-                {zone.label}
-              </span>
-            ))}
-          </div>
-          <div className="map-grid-overlay" />
-        </>
-      )}
-      <div id={mapId} className={`map ${mode === "emergency" ? "map-small" : ""}`} />
+      <div id={mapId} className="map map-small" />
       {!getMapboxToken() && (
         <div className="mapbox-missing-token">
           Add <code>VITE_MAPBOX_TOKEN</code> in your <code>.env</code> file to

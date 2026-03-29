@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
 import Loader from "./components/common/Loader";
@@ -15,14 +15,16 @@ import { useAppContext } from "./context/AppContext";
 
 const App = () => {
   const { loading, error, retry } = useAppContext();
+  const { pathname } = useLocation();
+  const isDashboard = pathname === "/dashboard";
 
   return (
     <>
       {(loading || error) && <Loader error={error} onRetry={retry} />}
-      <div className="app-layout">
-        <Sidebar />
+      <div className={`app-layout ${isDashboard ? "dashboard-shell" : ""}`.trim()}>
+        {!isDashboard && <Sidebar />}
         <main className="main-content">
-          <Topbar />
+          {!isDashboard && <Topbar />}
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
