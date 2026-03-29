@@ -11,12 +11,43 @@ export const CITY_SEEDS = {
   indore: { name: "Indore", state: "Madhya Pradesh", lat: 22.7196, lng: 75.8577, traffic: 36, aqi: 79, energyGw: 0.88 },
   bhopal: { name: "Bhopal", state: "Madhya Pradesh", lat: 23.2599, lng: 77.4126, traffic: 34, aqi: 82, energyGw: 0.83 },
   lucknow: { name: "Lucknow", state: "Uttar Pradesh", lat: 26.8467, lng: 80.9462, traffic: 42, aqi: 109, energyGw: 0.97 },
+  surat: { name: "Surat", state: "Gujarat", lat: 21.1702, lng: 72.8311, traffic: 37, aqi: 85, energyGw: 0.91 },
+  nagpur: { name: "Nagpur", state: "Maharashtra", lat: 21.1458, lng: 79.0882, traffic: 35, aqi: 81, energyGw: 0.86 },
+  patna: { name: "Patna", state: "Bihar", lat: 25.5941, lng: 85.1376, traffic: 40, aqi: 112, energyGw: 0.89 },
+  kanpur: { name: "Kanpur", state: "Uttar Pradesh", lat: 26.4499, lng: 80.3319, traffic: 43, aqi: 118, energyGw: 0.93 },
+  chandigarh: { name: "Chandigarh", state: "Chandigarh", lat: 30.7333, lng: 76.7794, traffic: 31, aqi: 74, energyGw: 0.76 },
+  kochi: { name: "Kochi", state: "Kerala", lat: 9.9312, lng: 76.2673, traffic: 33, aqi: 58, energyGw: 0.71 },
 };
 
-export const CITY_OPTIONS = Object.entries(CITY_SEEDS).map(([id, value]) => ({
+const safeText = (value, fallback) =>
+  typeof value === "string" && value.trim() ? value.trim() : fallback;
+
+const safeNumber = (value, fallback, min, max) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return Math.min(max, Math.max(min, parsed));
+};
+
+const normalizeCitySeed = (id, seed) => ({
   id,
-  ...value,
-}));
+  name: safeText(seed?.name, "Unknown City"),
+  state: safeText(seed?.state, "Unknown State"),
+  lat: safeNumber(seed?.lat, 28.6139, -90, 90),
+  lng: safeNumber(seed?.lng, 77.209, -180, 180),
+  traffic: safeNumber(seed?.traffic, 40, 10, 90),
+  aqi: safeNumber(seed?.aqi, 90, 10, 300),
+  energyGw: Number(safeNumber(seed?.energyGw, 1.0, 0.3, 4).toFixed(2)),
+});
+
+const NORMALIZED_CITY_SEEDS = Object.fromEntries(
+  Object.entries(CITY_SEEDS).map(([id, seed]) => [id, normalizeCitySeed(id, seed)]),
+);
+
+export const CITY_OPTIONS = Object.values(NORMALIZED_CITY_SEEDS).sort((a, b) =>
+  a.name.localeCompare(b.name),
+);
 
 const incidentTitles = {
   critical: [
@@ -101,8 +132,79 @@ const buildCityAlerts = (citySeed, incidents) => {
   ];
 };
 
+const normalizeIncidents = (citySeed, incidents) =>
+  incidents.map((incident, index) => ({
+    id: safeText(incident?.id, `IN-${citySeed.name.slice(0, 3).toUpperCase()}-${index + 1}`),
+    severity: ["critical", "warning", "normal"].includes(incident?.severity)
+      ? incident.severity
+      : "warning",
+    title: safeText(incident?.title, `${citySeed.name} operational event`),
+    location: safeText(incident?.location, `${citySeed.name} Core Zone`),
+    status: safeText(incident?.status, "active"),
+    owner: safeText(incident?.owner, "Operations Command"),
+    eta: safeText(incident?.eta, "TBD"),
+    description: safeText(
+      incident?.description,
+      `${citySeed.name} command center monitoring this event.`,
+    ),
+    lat: Number(safeNumber(incident?.lat, citySeed.lat, -90, 90).toFixed(4)),
+    lng: Number(safeNumber(incident?.lng, citySeed.lng, -180, 180).toFixed(4)),
+  }));
+
+const normalizeAlerts = (citySeed, alerts, incidents) =>
+  alerts.map((alert, index) => ({
+    id: safeText(alert?.id, `AL-${citySeed.name.slice(0, 3).toUpperCase()}-${index + 1}`),
+    severity: ["critical", "warning", "normal"].includes(alert?.severity)
+      ? alert.severity
+      : "warning",
+    title: safeText(alert?.title, `${citySeed.name} operational alert`),
+    area: safeText(alert?.area, `${citySeed.name} Core Zone`),
+    timestamp: safeText(alert?.timestamp, "just now"),
+    incidentId:
+      safeText(alert?.incidentId, "") ||
+      incidents[index]?.id ||
+      incidents[0]?.id ||
+      "IN-UNKNOWN-1",
+  }));
+
+const ensureCompleteState = (state) => {
+  const city = NORMALIZED_CITY_SEEDS[state.cityId] || NORMALIZED_CITY_SEEDS.delhi;
+  const incidents = normalizeIncidents(city, state.incidents || buildCityIncidents(city));
+  const alerts = normalizeAlerts(city, state.alerts || buildCityAlerts(city, incidents), incidents);
+  const activeCount = Math.max(
+    1,
+    incidents.filter((item) => item.status.toLowerCase() === "active").length,
+  );
+
+  const traffic = safeNumber(state.metrics?.trafficCongestion, city.traffic, 10, 95);
+  const aqi = safeNumber(state.metrics?.aqi, city.aqi, 10, 300);
+  const energyGw = Number(safeNumber(state.metrics?.energyGw, city.energyGw, 0.3, 4).toFixed(2));
+
+  return {
+    cityId: city.id,
+    cityName: city.name,
+    stateName: city.state,
+    cityCenter: { lat: city.lat, lng: city.lng },
+    metrics: {
+      trafficCongestion: traffic,
+      aqi,
+      energyGw,
+      incidents: safeNumber(state.metrics?.incidents, activeCount, 1, 12),
+      subscores: toSubscores({
+        traffic,
+        aqi,
+        energyGw,
+        incidents: safeNumber(state.metrics?.incidents, activeCount, 1, 12),
+      }),
+    },
+    incidents,
+    alerts,
+    lastUpdatedTs: Number(state.lastUpdatedTs) || Date.now(),
+  };
+};
+
 export const initialSimulationState = (cityId = "delhi") => {
-  const city = CITY_SEEDS[cityId] || CITY_SEEDS.delhi;
+  const city = NORMALIZED_CITY_SEEDS[cityId] || NORMALIZED_CITY_SEEDS.delhi;
   const incidents = buildCityIncidents(city);
   const incidentsCount = incidents.filter((item) => item.status === "active").length;
   const metrics = {
@@ -118,7 +220,7 @@ export const initialSimulationState = (cityId = "delhi") => {
     }),
   };
 
-  return {
+  return ensureCompleteState({
     cityId,
     cityName: city.name,
     stateName: city.state,
@@ -127,7 +229,7 @@ export const initialSimulationState = (cityId = "delhi") => {
     alerts: buildCityAlerts(city, incidents),
     incidents,
     lastUpdatedTs: Date.now(),
-  };
+  });
 };
 
 const bumpMetric = (value, min, max, step = 3) => {
@@ -172,7 +274,7 @@ export const buildInsightText = (state) => {
 };
 
 export const nextSimulationState = (current) => {
-  const next = structuredClone(current);
+  const next = structuredClone(ensureCompleteState(current));
   next.metrics.trafficCongestion = bumpMetric(next.metrics.trafficCongestion, 25, 72, 4);
   next.metrics.aqi = bumpMetric(next.metrics.aqi, 48, 160, 6);
   next.metrics.energyGw = Number(
@@ -206,5 +308,5 @@ export const nextSimulationState = (current) => {
     }
   }
   next.lastUpdatedTs = Date.now();
-  return next;
+  return ensureCompleteState(next);
 };
