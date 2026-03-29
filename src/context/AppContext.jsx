@@ -14,6 +14,10 @@ export const AppProvider = ({ children }) => {
   const { data, loading, error, retry, setData } = useSimulation();
   const [selectedIncident, setSelectedIncident] = useState("IN-931");
   const [selectedCityId, setSelectedCityId] = useState("delhi");
+  const [theme, setTheme] = useState(() => {
+    const storedTheme = window.localStorage.getItem("urbanpulse-theme");
+    return storedTheme === "light" ? "light" : "dark";
+  });
 
   const switchCity = useCallback((cityId) => {
     const nextState = initialSimulationState(cityId);
@@ -21,6 +25,14 @@ export const AppProvider = ({ children }) => {
     setData(nextState);
     setSelectedIncident(nextState.incidents[0]?.id || null);
   }, [setData]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      window.localStorage.setItem("urbanpulse-theme", next);
+      return next;
+    });
+  }, []);
 
   const value = useMemo(() => {
     const cityHealthScore = calculateCityHealth(data.metrics.subscores);
@@ -35,11 +47,13 @@ export const AppProvider = ({ children }) => {
       selectedCityName: data.cityName,
       cityOptions: CITY_OPTIONS,
       switchCity,
+      theme,
+      toggleTheme,
       cityHealthScore,
       cityHealthSeverity: getSeverityLabel(cityHealthScore),
       insightText: buildInsightText(data),
     };
-  }, [data, loading, error, retry, selectedIncident, selectedCityId, switchCity]);
+  }, [data, loading, error, retry, selectedIncident, selectedCityId, switchCity, theme, toggleTheme]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

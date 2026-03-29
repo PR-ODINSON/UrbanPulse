@@ -1369,6 +1369,72 @@ body::before {
   }
 }
 
+body[data-theme="light"] {
+  --bg: #f1f5fb;
+  --bg-elev-1: #ffffff;
+  --bg-elev-2: #f8fbff;
+  --border: rgba(15, 23, 42, 0.12);
+  --text: #0f172a;
+  --muted: #526178;
+  --cyan: #0891b2;
+  --cyan-dim: #0e7490;
+  --color-critical: #dc2626;
+  --color-warning: #d97706;
+  --color-nominal: #059669;
+  --color-info: #2563eb;
+  background: #eff4fb;
+  color: var(--text);
+}
+
+body[data-theme="light"]::before {
+  opacity: 0.06;
+  background:
+    linear-gradient(transparent 96%, rgba(15, 23, 42, 0.18) 96%),
+    linear-gradient(90deg, transparent 96%, rgba(15, 23, 42, 0.12) 96%);
+}
+
+body[data-theme="light"] .dashboard-root,
+body[data-theme="light"] .top-bar,
+body[data-theme="light"] .alerts-container,
+body[data-theme="light"] .kpi-container {
+  background: #f8fbff;
+}
+
+body[data-theme="light"] .top-bar,
+body[data-theme="light"] .alerts-container,
+body[data-theme="light"] .kpi-container,
+body[data-theme="light"] .map-container {
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+body[data-theme="light"] .alert-title,
+body[data-theme="light"] .kpi-value {
+  color: #0f172a;
+}
+
+body[data-theme="light"] .alert-meta,
+body[data-theme="light"] .kpi-label,
+body[data-theme="light"] .kpi-delta,
+body[data-theme="light"] .health-label,
+body[data-theme="light"] .live-indicator,
+body[data-theme="light"] .alerts-header {
+  color: rgba(15, 23, 42, 0.52);
+}
+
+body[data-theme="light"] .kpi-card {
+  background: #ffffff;
+}
+
+body[data-theme="light"] .kpi-card:hover,
+body[data-theme="light"] .alert-card:hover {
+  background: #f1f6ff;
+}
+
+body[data-theme="light"] .map-control-btn {
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(15, 23, 42, 0.72);
+}
+
 /* Smart City dashboard redesign */
 :root {
   --bg-base: #0a0e1a;
