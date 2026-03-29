@@ -1,0 +1,20 @@
+:root {
+  /* Landing page tokens */
+  --lp-black: #0c0c0c;
+  --lp-charcoal: #1a1a1a;
+  --lp-graphite: #2e2e2e;
+  --lp-mid: #6b6b6b;
+  --lp-muted: #a0a0a0;
+  --lp-rule: rgba(255, 255, 255, 0.08);
+  --lp-rule-light: rgba(0, 0, 0, 0.1);
+  --lp-white: #f7f5f0;
+  --lp-amber: #d4a853;
+  --lp-amber-dim: rgba(212, 168, 83, 0.15);
+
+  --lp-font-display: "Cormorant Garamond", Georgia, serif;
+  --lp-font-mono: "Geist Mono", "JetBrains Mono", monospace;
+  --lp-font-ui: "DM Sans", system-ui, sans-serif;
+
+  --lp-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --lp-ease-in-out: cubic-bezier(0.83, 0, 0.17, 1);
+}

@@ -1,8 +1,9 @@
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
 import Loader from "./components/common/Loader";
 import Dashboard from "./pages/Dashboard";
+import LandingPage from "./pages/LandingPage";
 import Traffic from "./pages/Traffic";
 import Environment from "./pages/Environment";
 import Utilities from "./pages/Utilities";
@@ -16,17 +17,17 @@ import { useAppContext } from "./context/AppContext";
 const App = () => {
   const { loading, error, retry } = useAppContext();
   const { pathname } = useLocation();
-  const isDashboard = pathname === "/dashboard";
+  const isStandaloneView = pathname === "/dashboard" || pathname === "/";
 
   return (
     <>
       {(loading || error) && <Loader error={error} onRetry={retry} />}
-      <div className={`app-layout ${isDashboard ? "dashboard-shell" : ""}`.trim()}>
-        {!isDashboard && <Sidebar />}
+      <div className={`app-layout ${isStandaloneView ? "dashboard-shell" : ""}`.trim()}>
+        {!isStandaloneView && <Sidebar />}
         <main className="main-content">
-          {!isDashboard && <Topbar />}
+          {!isStandaloneView && <Topbar />}
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/traffic" element={<Traffic />} />
             <Route path="/environment" element={<Environment />} />
