@@ -30,6 +30,7 @@ const Sidebar = () => {
             className={({ isActive }) =>
               `nav-item ${isActive ? "active" : ""}`.trim()
             }
+            data-route={item.to.replace("/", "") || "dashboard"}
           >
             {item.label}
           </NavLink>

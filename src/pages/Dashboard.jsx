@@ -1,25 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import MapView from "../components/dashboard/MapView";
-import KPICard from "../components/dashboard/KPICard";
-import AlertsPanel from "../components/dashboard/AlertsPanel";
-import Topbar from "../components/layout/Topbar";
 import { useAppContext } from "../context/AppContext";
 
-const detailTexts = {
-  traffic:
-    "Current congestion is elevated in central corridors. Recommended action: prioritize dynamic signal timing and reroute heavy freight.",
-  aqi: "AQI is in moderate range citywide, with warning pockets in East Ring. Suggested action: monitor school zones and issue targeted advisories.",
-  energy:
-    "Energy demand is below critical threshold but climbing. Maintain reserve margin and monitor substation E2 for anomaly progression.",
-  incidents:
-    "Three incidents active across transport and environment. One critical incident requires cross-department coordination.",
-  health:
-    "Composite health balances mobility, environment, utilities, and response posture. Monitor trend changes for proactive interventions.",
-};
-
 const Dashboard = () => {
-  const { data, setSelectedIncident } = useAppContext();
-  const [drawerType, setDrawerType] = useState(null);
+  const { data, setSelectedIncident, cityHealthScore } = useAppContext();
 
   const kpis = useMemo(
     () => [
@@ -29,6 +13,8 @@ const Dashboard = () => {
         title: "Traffic Congestion",
         subtitle: "Citywide avg. delay",
         value: data.metrics.trafficCongestion,
+        delta: "-1.8% avg delay",
+        tone: "down",
       },
       {
         key: "aqi",
@@ -36,6 +22,8 @@ const Dashboard = () => {
         title: "AQI Level",
         subtitle: "Moderate air quality",
         value: data.metrics.aqi,
+        delta: "+2.2% moderate",
+        tone: "warn",
       },
       {
         key: "energy",
@@ -43,6 +31,8 @@ const Dashboard = () => {
         title: "Energy Usage",
         subtitle: "Current demand",
         value: data.metrics.energyGw,
+        delta: "-0.4% current demand",
+        tone: "up",
       },
       {
         key: "incidents",
@@ -50,6 +40,8 @@ const Dashboard = () => {
         title: "Active Incidents",
         subtitle: "Operational queue",
         value: data.metrics.incidents,
+        delta: "+1 operational queue",
+        tone: "warn",
       },
       {
         key: "health",
@@ -63,51 +55,104 @@ const Dashboard = () => {
             data.metrics.subscores.incidents) /
             4,
         ),
+        delta: "+2 composite score",
+        tone: "up",
       },
     ],
     [data.metrics],
   );
 
   return (
-    <>
-      <section className="view active dashboard-root">
-        <div className="topbar-container">
-          <Topbar />
+    <section className="view active page-root" data-page="dashboard">
+      <div className="page-hero">
+        <div className="page-hero__left">
+          <span className="page-hero__eyebrow" style={{ color: "#38BDF8" }}>
+            City Operations Overview
+          </span>
+          <h1 className="page-hero__title">Command Center</h1>
         </div>
-        <MapView
-          mode="dashboard"
-          title="City Operations Map"
-          incidents={data.incidents}
-          selectedIncident={null}
-          onSelectIncident={setSelectedIncident}
-        />
-
-        <AlertsPanel alerts={data.alerts} onOpenIncident={setSelectedIncident} />
-
-        <section className="kpi-container">
-          {kpis.map((kpi) => (
-            <KPICard
-              key={kpi.key}
-              type={kpi.type}
-              title={kpi.title}
-              subtitle={kpi.subtitle}
-              value={kpi.value}
-              onClick={() => setDrawerType(kpi.type)}
-            />
-          ))}
-        </section>
-      </section>
-
-      <aside className={`detail-drawer ${drawerType ? "" : "hidden"}`.trim()}>
-        <div className="drawer-head">
-          <h3>{drawerType ? drawerType.toUpperCase() : "Detail"}</h3>
-          <button className="btn btn-ghost" onClick={() => setDrawerType(null)}>
-            Close
-          </button>
+        <div className="stat-cell" style={{ background: "transparent", padding: 0 }}>
+          <span className="stat-cell__label">City Health</span>
+          <span className="stat-cell__value val--warning" style={{ fontSize: 42 }}>
+            {cityHealthScore}
+          </span>
+          <span className="stat-cell__delta up">↑ +2 pts</span>
         </div>
-        <p className="muted">{drawerType ? detailTexts[drawerType] : ""}</p>
-      </aside>
-    </>
+      </div>
+
+      <div className="page-body">
+        <div className="pcard">
+          <div className="stat-row" style={{ gridTemplateColumns: "repeat(5, 1fr)" }}>
+            {kpis.map((kpi) => (
+              <div key={kpi.key} className="stat-cell">
+                <span className="stat-cell__label">{kpi.title}</span>
+                <span
+                  className={`stat-cell__value ${
+                    kpi.type === "incidents"
+                      ? "val--critical"
+                      : kpi.type === "energy"
+                        ? "val--ok"
+                        : "val--warning"
+                  }`}
+                >
+                  {kpi.type === "energy"
+                    ? `${Number(kpi.value).toFixed(2)} GW`
+                    : `${Math.round(kpi.value)}${kpi.type === "traffic" ? "%" : ""}`}
+                </span>
+                <span className={`stat-cell__delta ${kpi.tone}`}>{kpi.delta}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="page-row page-row--6535" style={{ flex: 1, minHeight: 0 }}>
+          <div className="pcard">
+            <div className="pcard__header">
+              <span className="pcard__title">Live City Map</span>
+              <span className="pcard__badge pcard__badge--ok">Live</span>
+            </div>
+            <div className="pcard__body--noPad" style={{ flex: 1, minHeight: 300 }}>
+              <MapView
+                mode="dashboard"
+                title="City Operations Map"
+                incidents={data.incidents}
+                selectedIncident={null}
+                onSelectIncident={setSelectedIncident}
+              />
+            </div>
+          </div>
+
+          <div className="pcard">
+            <div className="pcard__header">
+              <span className="pcard__title">Real-Time Alerts</span>
+              <span className="pcard__badge pcard__badge--critical">2 Critical</span>
+            </div>
+            <div className="pcard__body--noPad" style={{ flex: 1, overflowY: "auto" }}>
+              {data.alerts.map((alert) => (
+                <div
+                  key={alert.id}
+                  className={`incident-row ${
+                    alert.severity === "critical"
+                      ? "critical"
+                      : alert.severity === "warning"
+                        ? "warning"
+                        : "resolved"
+                  }`}
+                  onClick={() => setSelectedIncident(alert.incidentId)}
+                >
+                  <div className="incident-row__id">{alert.id}</div>
+                  <div className="incident-row__title">{alert.title}</div>
+                  <div className="incident-row__meta">
+                    <span>{alert.area}</span>
+                    <span>{alert.timestamp}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 

@@ -49,6 +49,11 @@ export default function HeroSection() {
           <br />
           air quality, and public safety - unified in one command center.
         </p>
+        <p className="lp-hero__system-note">
+          UrbanPulse is an operations system for city control rooms: it fuses live
+          sensor streams, ranks incidents by severity, and guides teams from detection
+          to response in one dashboard.
+        </p>
 
         <div className="lp-hero__actions">
           <Link to="/dashboard" className="lp-btn lp-btn--primary">

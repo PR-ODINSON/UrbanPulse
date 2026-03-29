@@ -12,9 +12,9 @@ export default function LandingPage() {
   useScrollReveal();
 
   useEffect(() => {
-    document.body.classList.add("lp-page");
+    document.body.classList.add("landing-mode");
     return () => {
-      document.body.classList.remove("lp-page");
+      document.body.classList.remove("landing-mode");
     };
   }, []);
 
