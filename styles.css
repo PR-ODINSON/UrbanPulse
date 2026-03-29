@@ -691,6 +691,7 @@ body::before {
 
 .dashboard-grid {
   gap: 16px;
+  align-items: start;
 }
 
 .panel {
@@ -715,9 +716,10 @@ body::before {
 
 .city-health-panel {
   grid-column: span 12;
-  min-height: 280px;
+  min-height: 360px;
   position: relative;
   overflow: hidden;
+  text-align: center;
 }
 
 .city-health-panel::after {
@@ -733,9 +735,9 @@ body::before {
 }
 
 .health-summary {
-  max-width: 680px;
+  max-width: 860px;
   margin: 0 auto;
-  gap: 14px;
+  gap: 20px;
 }
 
 .score-wrap {
@@ -748,8 +750,8 @@ body::before {
 
 .score-ring {
   --score-angle: 288deg;
-  width: 210px;
-  height: 210px;
+  width: 250px;
+  height: 250px;
   position: relative;
   border-radius: 50%;
   background:
@@ -773,10 +775,43 @@ body::before {
 }
 
 .score-ring span {
-  font-size: 56px;
-  font-weight: 700;
+  font-size: 72px;
+  font-weight: 800;
   letter-spacing: 1px;
   text-shadow: 0 0 15px rgba(77, 163, 255, 0.4);
+}
+
+.hero-health-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
+  min-height: 34px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.hero-health-status.status-online {
+  color: #68ffb1;
+  border-color: rgba(45, 207, 120, 0.45);
+  box-shadow: 0 0 16px rgba(45, 207, 120, 0.22);
+}
+
+.hero-health-status.warning {
+  color: #ffd27f;
+  border-color: rgba(244, 183, 76, 0.55);
+  box-shadow: 0 0 16px rgba(244, 183, 76, 0.2);
+}
+
+.hero-health-status.critical {
+  color: #ff8d8d;
+  border-color: rgba(255, 93, 93, 0.56);
+  box-shadow: 0 0 16px rgba(255, 93, 93, 0.25);
 }
 
 @keyframes hero-ring-spin {
@@ -831,8 +866,8 @@ body::before {
 .map {
   position: relative;
   overflow: hidden;
-  height: 58vh;
-  min-height: 420px;
+  height: 68vh;
+  min-height: 480px;
   border: 1px solid rgba(93, 176, 255, 0.22);
   box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.22);
 }
@@ -851,6 +886,7 @@ body::before {
   left: 16px;
   top: 52px;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -864,13 +900,31 @@ body::before {
   backdrop-filter: blur(6px);
 }
 
+.map-grid-overlay {
+  position: absolute;
+  inset: 62px 14px 14px;
+  pointer-events: none;
+  border-radius: 10px;
+  z-index: 300;
+  background:
+    linear-gradient(transparent 95%, rgba(90, 177, 255, 0.08) 95%),
+    linear-gradient(90deg, transparent 95%, rgba(90, 177, 255, 0.08) 95%);
+  background-size: 48px 48px;
+  mix-blend-mode: screen;
+  opacity: 0.5;
+}
+
 .kpi-grid {
-  grid-column: span 9;
+  grid-column: span 8;
   grid-template-columns: repeat(4, 1fr);
 }
 
 .alerts-panel {
-  grid-column: span 3;
+  grid-column: span 4;
+  align-self: stretch;
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.32),
+    0 0 20px rgba(255, 93, 93, 0.08);
 }
 
 .kpi-card {
@@ -956,7 +1010,8 @@ body::before {
 
 .alert-item.critical {
   background: linear-gradient(120deg, rgba(255, 93, 93, 0.22), rgba(255, 93, 93, 0.06));
-  box-shadow: 0 0 16px rgba(255, 93, 93, 0.32);
+  border-color: rgba(255, 93, 93, 0.52);
+  box-shadow: 0 0 18px rgba(255, 93, 93, 0.36);
   animation: critical-pulse 1.6s ease-in-out infinite;
 }
 
@@ -965,7 +1020,8 @@ body::before {
 }
 
 .alert-item.normal {
-  background: linear-gradient(120deg, rgba(45, 207, 120, 0.18), rgba(45, 207, 120, 0.05));
+  border-left-color: rgba(153, 172, 201, 0.65);
+  background: linear-gradient(120deg, rgba(136, 155, 185, 0.16), rgba(136, 155, 185, 0.05));
 }
 
 @keyframes critical-pulse {
@@ -981,6 +1037,12 @@ body::before {
 .alert-item .btn-primary {
   margin-top: 10px;
   width: 100%;
+}
+
+.alert-item.critical .btn-primary {
+  background: linear-gradient(135deg, #ff6e6e, #ff4747);
+  color: #2a0606;
+  box-shadow: 0 0 18px rgba(255, 93, 93, 0.45);
 }
 
 .btn {
@@ -1034,14 +1096,13 @@ body::before {
 }
 
 .ai-insight-panel {
-  position: fixed;
-  left: 280px;
-  right: 24px;
-  bottom: 18px;
-  z-index: 14;
+  position: relative;
+  z-index: 8;
   display: flex;
   align-items: center;
   gap: 12px;
+  width: min(860px, 100%);
+  margin: 0 auto 14px;
   background: linear-gradient(130deg, rgba(11, 22, 39, 0.9), rgba(10, 20, 36, 0.68));
   border: 1px solid rgba(110, 186, 255, 0.24);
   border-radius: 12px;
@@ -1189,8 +1250,7 @@ body::before {
   }
 
   .ai-insight-panel {
-    left: 20px;
-    right: 20px;
+    width: 100%;
   }
 }
 

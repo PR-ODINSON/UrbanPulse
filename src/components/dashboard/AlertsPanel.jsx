@@ -32,7 +32,7 @@ const AlertsPanel = ({ alerts, onOpenIncident }) => {
                 className="btn btn-primary"
                 onClick={() => openEmergency(alert.incidentId)}
               >
-                ESCALATE / OPEN INCIDENT
+                🚨 ESCALATE NOW
               </button>
             )}
           </li>
